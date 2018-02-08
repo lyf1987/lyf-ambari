@@ -17,6 +17,8 @@
  */
 package org.apache.ambari.server.api.services;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -29,10 +31,14 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+import com.happyelements.ambari.auth.PaymentAuthInteceptor;
+import com.happyelements.config.AmbariConfig;
+import com.happyelements.rdcenter.commons.util.Base64;
 import org.apache.ambari.server.api.resources.ResourceInstance;
+import org.apache.ambari.server.controller.internal.UserPrivilegeResourceProvider;
 import org.apache.ambari.server.controller.spi.Resource;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.ambari.server.orm.entities.UserEntity;
 
 import java.util.Collections;
 
@@ -41,7 +47,6 @@ import java.util.Collections;
  */
 @Path("/users/")
 public class UserService extends BaseService {
-
   /**
    * Gets all users.
    * Handles: GET /users requests.
@@ -65,8 +70,55 @@ public class UserService extends BaseService {
   @Path("{userName}")
   @Produces("text/plain")
   public Response getUser(String body, @Context HttpHeaders headers, @Context UriInfo ui,
-      @PathParam("userName") String userName) {
+                          @PathParam("userName") String userName) {
     return handleRequest(headers, body, ui, Request.Type.GET, createUserResource(userName));
+  }
+
+  /**
+   * lyf test add Gets a sso login user.
+   * Handles: GET /users/sso requests
+   *
+   * @param request     request req
+   * @param response          response resp
+   * @return information regarding the created user
+   */
+  @GET
+  @Path("{userName}/sso")
+  public Response ssoUser(@Context HttpServletRequest request , @Context HttpServletResponse response) {
+    String retData = "";
+    try{
+      PaymentAuthInteceptor pai= new PaymentAuthInteceptor();
+      retData = pai.logIn(request, response);
+      if(retData.contains("name")){
+        String userName = retData.substring(retData.indexOf(":")+1);
+        StringBuilder redictUrl = new StringBuilder();
+        redictUrl.append(AmbariConfig.get().getAttribute("redict_url")).append("?name="+userName);
+
+        if(UserPrivilegeResourceProvider.getUserDAO() != null) {
+          UserEntity userEntity = UserPrivilegeResourceProvider.getUserDAO().findSingleUserByName(userName);
+          if(null == userEntity){
+            redictUrl.append("&error").append(AmbariConfig.get().getAttribute("auth_error_info"));
+          }else{
+            String password = userEntity.getProclaimPasswd();
+            String basicStr = Base64.encode(userName+":"+password);
+            redictUrl.append("&key="+basicStr);
+          }
+        }else{
+          redictUrl.append("&error").append(AmbariConfig.get().getAttribute("system_error_info"));
+        }
+        response.sendRedirect(redictUrl.toString());
+      }
+    }catch(Exception e){
+      e.printStackTrace();
+    }
+    int code = 200;
+    if(0 == retData.length()){
+      code = 400;
+    }else if(retData.contains("error")){
+      code = 403;
+    }
+    Response.ResponseBuilder builder = Response.status(code).entity(retData);
+    return builder.build();
   }
 
   /**
@@ -96,7 +148,7 @@ public class UserService extends BaseService {
   @Path("{userName}")
   @Produces("text/plain")
   public Response createUser(String body, @Context HttpHeaders headers, @Context UriInfo ui,
-      @PathParam("userName") String userName) {
+                             @PathParam("userName") String userName) {
     return handleRequest(headers, body, ui, Request.Type.POST, createUserResource(userName));
   }
 
@@ -113,7 +165,7 @@ public class UserService extends BaseService {
   @Path("{userName}")
   @Produces("text/plain")
   public Response updateUser(String body, @Context HttpHeaders headers, @Context UriInfo ui,
-                                 @PathParam("userName") String userName) {
+                             @PathParam("userName") String userName) {
 
     return handleRequest(headers, body, ui, Request.Type.PUT, createUserResource(userName));
   }
@@ -126,7 +178,7 @@ public class UserService extends BaseService {
   @Path("{userName}")
   @Produces("text/plain")
   public Response deleteUser(@Context HttpHeaders headers, @Context UriInfo ui,
-                                 @PathParam("userName") String userName) {
+                             @PathParam("userName") String userName) {
     return handleRequest(headers, null, ui, Request.Type.DELETE, createUserResource(userName));
   }
 
@@ -145,7 +197,7 @@ public class UserService extends BaseService {
    */
   @Path("{userName}/activeWidgetLayouts")
   public ActiveWidgetLayoutService getWidgetLayoutService(@Context javax.ws.rs.core.Request request,
-                                                    @PathParam ("userName") String userName) {
+                                                          @PathParam ("userName") String userName) {
 
     return new ActiveWidgetLayoutService(userName);
   }
@@ -159,7 +211,7 @@ public class UserService extends BaseService {
    */
   @Path("{userName}/authorizations")
   public UserAuthorizationService getUserAuthorizations(
-      @Context javax.ws.rs.core.Request request, @PathParam("userName") String username) {
+          @Context javax.ws.rs.core.Request request, @PathParam("userName") String username) {
     return new UserAuthorizationService(username);
   }
 
@@ -172,6 +224,6 @@ public class UserService extends BaseService {
    */
   private ResourceInstance createUserResource(String userName) {
     return createResource(Resource.Type.User,
-        Collections.singletonMap(Resource.Type.User, userName));
+            Collections.singletonMap(Resource.Type.User, userName));
   }
 }

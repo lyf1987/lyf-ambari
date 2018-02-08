@@ -132,6 +132,10 @@ public class UserPrivilegeResourceProvider extends ReadOnlyResourceProvider {
     UserPrivilegeResourceProvider.users           = users;
   }
 
+  public static UserDAO getUserDAO(){
+    return  userDAO;
+  }
+
   @SuppressWarnings("serial")
   private static Set<String> pkPropertyIds = new HashSet<String>() {
     {

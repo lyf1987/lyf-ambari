@@ -1065,6 +1065,7 @@ public class AmbariServer {
       KerberosChecker.checkJaasConfiguration();
       ViewRegistry.initInstance(server.viewRegistry);
       ComponentSSLConfiguration.instance().init(server.configs);
+    
       server.run();
     } catch (Throwable t) {
       // Writing to system console is needed because loggers may not get flushed on exit and diagnostic information

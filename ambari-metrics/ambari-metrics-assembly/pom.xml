@@ -88,6 +88,7 @@
       </plugin>
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
+	<version>2.4</version>  
         <executions>
           <execution>
             <id>collector</id>
@@ -1064,6 +1065,47 @@
       </properties>
       <build>
         <plugins>
+
+<!--lyf add-->
+<!--
+  	  <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <version>1.7</version>
+            <executions>
+              <execution>
+                <phase>generate-resources</phase>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+                <configuration>
+                  <target name="lyf make directory">
+                    <mkdir dir="${project.build.directory}/embedded" />
+                  </target>
+		        <tasks name="copy hadoop directory...">
+		         <copy todir="${project.build.directory}/embedded">
+		          <fileset dir="/data/ambari-need-soft/assembly/" />
+		         </copy>
+                    <move todir="${project.build.directory}/embedded/${hadoop.folder}/lib/native/">
+                      <fileset dir="${project.build.directory}/embedded/${hadoop.folder}/lib/native/"/>
+                      <mapper type="regexp" from="libsnappy.so.1.1.*" to="libsnappy.so.1"/>
+                    </move>
+                    <move
+                      file="${project.build.directory}/embedded/${hadoop.folder}/lib/native/libhdfs.so.0.0.0"
+                      tofile="${project.build.directory}/embedded/${hadoop.folder}/lib/native/libhdfs.so"
+                      />
+                    <move
+                      file="${project.build.directory}/embedded/${hadoop.folder}/lib/native/libhadoop.so.1.0.0"
+                      tofile="${project.build.directory}/embedded/${hadoop.folder}/lib/native/libhadoop.so"
+                      />
+                    <delete file="${project.build.directory}/embedded/${hadoop.folder}/lib/native/libsnappy.so"/>
+		        </tasks>
+		       </configuration>
+		      </execution>
+            </executions>
+          </plugin>
+-->
+
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-antrun-plugin</artifactId>
@@ -1088,7 +1130,6 @@
                       dest="${project.build.directory}/embedded"
                       compression="gzip"
                       />
-                    <!-- Resolving symlinks-->
                     <move todir="${project.build.directory}/embedded/${hadoop.folder}/lib/native/">
                       <fileset dir="${project.build.directory}/embedded/${hadoop.folder}/lib/native/"/>
                       <mapper type="regexp" from="libsnappy.so.1.1.*" to="libsnappy.so.1"/>
@@ -1107,6 +1148,8 @@
               </execution>
             </executions>
           </plugin>
+
+
         </plugins>
       </build>
     </profile>
@@ -1179,6 +1222,7 @@
           <!-- choco package creation -->
           <plugin>
             <artifactId>maven-assembly-plugin</artifactId>
+	    <version>2.4</version> 
             <executions>
               <execution>
                 <id>collector-choco-dir</id>

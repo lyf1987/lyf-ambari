@@ -31,7 +31,8 @@ class HDP26StackAdvisor(HDP25StackAdvisor):
   def getServiceConfigurationRecommenderDict(self):
       parentRecommendConfDict = super(HDP26StackAdvisor, self).getServiceConfigurationRecommenderDict()
       childRecommendConfDict = {
-        "DRUID": self.recommendDruidConfigurations,
+        "DRUID1": self.recommendDruidConfigurations,
+        "DRUID2": self.recommendDruidConfigurations,
         "SUPERSET": self.recommendSupersetConfigurations,
         "ATLAS": self.recommendAtlasConfigurations,
         "TEZ": self.recommendTezConfigurations,

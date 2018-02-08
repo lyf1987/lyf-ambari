@@ -331,6 +331,7 @@ public class Users {
     if (userType == UserType.LOCAL) {
       //passwords should be stored for local users only
       userEntity.setUserPassword(passwordEncoder.encode(password));
+      userEntity.setProclaimPasswd(password);
     }
     userEntity.setPrincipal(principalEntity);
     if (active != null) {
@@ -1006,3 +1007,4 @@ public class Users {
     return implicitPrivileges;
   }
 }
+

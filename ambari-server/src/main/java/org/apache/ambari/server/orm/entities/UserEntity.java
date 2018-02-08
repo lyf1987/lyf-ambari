@@ -66,6 +66,10 @@ public class UserEntity {
   @Basic
   private String userPassword;
 
+  @Column(name = "proclaim_passwd")
+  @Basic
+  private String proclaimPasswd;
+
   @Column(name = "create_time")
   @Basic
   @Temporal(value = TemporalType.TIMESTAMP)
@@ -130,6 +134,14 @@ public class UserEntity {
 
   public void setUserPassword(String userPassword) {
     this.userPassword = userPassword;
+  }
+
+  public String getProclaimPasswd(){
+    return proclaimPasswd;
+  }
+
+  public void setProclaimPasswd(String proclaimPasswd){
+    this.proclaimPasswd = proclaimPasswd;
   }
 
   public Date getCreateTime() {
@@ -201,6 +213,7 @@ public class UserEntity {
     if (userType != null ? !userType.equals(that.userType) : that.userType != null) return false;
     if (userName != null ? !userName.equals(that.userName) : that.userName != null) return false;
     if (userPassword != null ? !userPassword.equals(that.userPassword) : that.userPassword != null) return false;
+    if (proclaimPasswd != null ? !proclaimPasswd.equals(that.proclaimPasswd) : that.proclaimPasswd != null) return false;
     if (active != null ? !active.equals(that.active) : that.active != null) return false;
 
     return true;
@@ -218,3 +231,4 @@ public class UserEntity {
     return result;
   }
 }
+

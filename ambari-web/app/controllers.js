@@ -21,6 +21,7 @@
 
 require('controllers/application');
 require('controllers/login_controller');
+require('controllers/mydefault_controller');
 require('controllers/wizard');
 require('controllers/installer');
 require('controllers/experimental');

@@ -30,6 +30,8 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletResponseWrapper;
 
 import org.apache.ambari.server.security.authorization.AuthorizationHelper;
 
@@ -102,8 +104,8 @@ public class UserNameOverrideFilter implements Filter {
         }
       }
     }
-
     chain.doFilter(request, response);
+
   }
 
   /**
@@ -135,3 +137,4 @@ public class UserNameOverrideFilter implements Filter {
 
   }
 }
+

@@ -2316,6 +2316,22 @@ var urls = {
       };
     }
   },
+ //lyf add
+ 'router.ssologin': {
+   'real': '/users/{loginName}/sso?fields=*',
+   'mock': '/data/users/user_{usr}.json',
+   'format': function (data) {
+      var statusCode = jQuery.extend({}, require('data/statusCodes'));
+      statusCode['403'] = function () {
+        console.log("Error code 403: Forbidden.");
+      };
+      return {
+        statusCode: statusCode
+      };
+   }
+ },
+
+
   'users.all': {
     real: '/users/?fields=*',
     mock: '/data/users/users.json'
@@ -3423,3 +3439,4 @@ if ($.mocho) {
 }
 
 App.ajax = ajax.create({});
+

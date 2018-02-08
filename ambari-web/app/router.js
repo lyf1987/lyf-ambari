@@ -254,7 +254,7 @@ App.Router = Em.Router.extend({
     return this.getLoginName();
   }.property('loggedIn'),
 
-  displayLoginName: Em.computed.truncate('loginName', 10, 10),
+  displayLoginName: Em.computed.truncate('loginName', 20, 20),
 
   /**
    * @type {$.ajax|null}
@@ -403,7 +403,9 @@ App.Router = Em.Router.extend({
     this.set('clusterInstallCompleted', clusterObject.items[0].Clusters.provisioning_state === 'INSTALLED')
   },
 
-  login: function () {
+ //lyf old
+ /*
+   login: function () {
     var controller = this.get('loginController');
     var loginName = controller.get('loginName');
     controller.set('loginName', loginName);
@@ -432,6 +434,118 @@ App.Router = Em.Router.extend({
     });
 
   },
+  */
+
+//lyf add sso login
+    ssologin: function(){
+        var hash = misc.utf8ToB64("user:user");
+        var usr = 'user';
+        App.ajax.send({
+            name: 'router.ssologin',
+            sender: this,
+            // async: false,
+            data: {
+                auth: "Basic " + hash,
+                usr: usr,
+                loginName: encodeURIComponent("user")
+            },
+            beforeSend: 'authBeforeSend',
+            success: 'ssologinSuccessCallback',
+            error: 'ssologinErrorCallback'
+        });
+    },
+
+    ssologinSuccessCallback: function(data) {
+        var object = eval('(' + data + ')');
+        if(null!=data && object.url != ''){
+            window.location.href=object.url;
+        }else if(null!=data && object.name != ''){
+            this.setLoginName(object.name);
+        }else{
+          if(null!=data && object.error!=''){
+              alert(object.error);
+          }else{
+              this.showLoginError("login accour error,please contract admin...");
+          }
+        }
+    },
+
+    ssologinErrorCallback: function(request) {
+        this.showLoginError("login accour error,please contract admin...");
+    },
+
+    getRequestParamName: function () {
+      var url = window.location.href; //获取url中"?"符后的字串
+      var theRequest = new Object();
+      if (url.indexOf("?") != -1) {
+          var str = url.substr(url.indexOf("?")+1);
+          var strs = str.split("&");
+          for(var i = 0; i < strs.length; i ++) {
+              theRequest[strs[i].substring(0, strs[i].indexOf("="))] = strs[i].substring(strs[i].indexOf("=")+1);
+          }
+      }
+      return theRequest;
+    },
+
+    clearBeforeLoginInfo: function () {
+        App.ajax.send({
+            name: 'router.logoff',
+            async: false,
+            sender: this,
+            beforeSend: 'logOffBeforeSend'
+        });
+    },
+
+    sleep: function (numberMillis) {
+        var now = new Date();
+        var exitTime = now.getTime() + numberMillis;
+        while (true) {
+            now = new Date();
+            if (now.getTime() > exitTime)
+                return;
+        }
+    },
+
+    showLoginError: function (message) {
+        this.get('applicationController').connectOutlet('mydefault');
+        var controller = this.get('mydefaultController');
+        this.setAuthenticated(false);
+        controller.postLogin(false, false, message);
+    },
+
+//lyf change
+  login: function () {
+        var controller = this.get('loginController');
+        var reqName = this.getRequestParamName();
+        if(JSON.stringify(reqName) == "{}"){
+            this.ssologin();
+        }else{
+            this.clearBeforeLoginInfo();
+            this.sleep(500);
+            var loginName = reqName['name'];
+            if(reqName.hasOwnProperty("error")){
+              this.showLoginError(reqName['error']);
+            }else if(reqName.hasOwnProperty("key")){
+                var hash = reqName['key'];
+                controller.set('loginName', loginName);
+
+                App.ajax.send({
+                    name: 'router.login',
+                    sender: this,
+                    data: {
+                        auth: "Basic " + hash,
+                        usr: '',
+                        loginName: encodeURIComponent(loginName)
+                    },
+                    beforeSend: 'authBeforeSend',
+                    success: 'loginSuccessCallback',
+                    error: 'loginErrorCallback'
+                });
+            }else{
+              alert("unknow login....");
+            }
+        }
+   },
 
   authBeforeSend: function(opt, xhr, data) {
     xhr.setRequestHeader("Authorization", data.auth);
@@ -458,7 +572,8 @@ App.Router = Em.Router.extend({
   },
 
   loginErrorCallback: function(request) {
-    var controller = this.get('loginController');
+    this.get('applicationController').connectOutlet('mydefault');
+    var controller = this.get('mydefaultController');
     this.setAuthenticated(false);
     if (request.status > 400) {
       var responseMessage = request.responseText;
@@ -899,7 +1014,7 @@ App.Router = Em.Router.extend({
   root: Em.Route.extend({
     index: Em.Route.extend({
       route: '/',
-      redirectsTo: 'login'
+       redirectsTo: 'login'
     }),
 
     enter: function(router){
@@ -910,11 +1025,11 @@ App.Router = Em.Router.extend({
 
     login: Em.Route.extend({
       route: '/login:suffix',
-
+    // lyf delete
       /**
        *  If the user is already logged in, redirect to where the user was previously
        */
-      enter: function (router, context) {
+      /*enter: function (router, context) {
         if ($.mocho) {
           return;
         }
@@ -931,11 +1046,12 @@ App.Router = Em.Router.extend({
             router.savePreferedPath(location, '?targetURI=');
           }
         });
-      },
+      },*/
 
       connectOutlets: function (router, context) {
         $('title').text(Em.I18n.t('app.name'));
-        router.get('applicationController').connectOutlet('login');
+        // router.get('applicationController').connectOutlet('login');
+        App.get('router').login();
       },
 
       serialize: function(router, context) {
@@ -1003,3 +1119,4 @@ App.Router = Em.Router.extend({
 
   })
 });
+
